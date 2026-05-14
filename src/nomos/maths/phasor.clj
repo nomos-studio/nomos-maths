@@ -1,9 +1,9 @@
 ; SPDX-License-Identifier: EPL-2.0
-(ns cljseq.phasor
-  "Pure phasor math — the foundational signal vocabulary for cljseq.
+(ns nomos.maths.phasor
+  "Pure phasor math — the foundational signal vocabulary for nomos-studio.
 
   A unipolar phasor is a linear ramp in [0.0, 1.0) cycling at a given rate.
-  All periodic signals in cljseq (LFOs, clocks, envelopes, step sequences)
+  All periodic signals (LFOs, clocks, envelopes, step sequences)
   are derived by applying operations from this namespace to a phasor value.
 
   No dependencies. All functions are pure transformations over doubles.
