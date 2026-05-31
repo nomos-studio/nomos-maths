@@ -1,5 +1,5 @@
 ; SPDX-License-Identifier: EPL-2.0
-(defproject nomos-maths "0.1.0"
+(defproject nomos-maths "0.2.0"
   :description "nomos-maths — pure signal and DSP mathematics for the nomos-studio ecosystem"
   :url "https://github.com/nomos-studio/nomos-maths"
   :license {:name "EPL-2.0"
