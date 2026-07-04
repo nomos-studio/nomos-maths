@@ -136,28 +136,40 @@
        (sort-by :h-from-here)))
 
 (defn gravity-steps
-  "Return region points that are closer to the origin than `position`,
-  sorted nearest-first (smallest H-distance from position).
+  "Return region points closer to `attractor` than `position` is,
+  sorted nearest-first (smallest Tenney distance from position).
 
   These are the candidate steps under harmonic gravity — moving to any of
-  these reduces tension. deflattice selects among them using gravity-weight."
-  [position ^LatticeRegion region]
-  (let [current-h (h/tenney-h position)]
-    (->> (:points region)
-         (filter #(< (h/tenney-h %) current-h))
-         (sort-by #(h/tenney-h % position)))))
+  these reduces harmonic distance from the attractor. deflattice selects
+  among them using gravity-weight.
+
+  Two-arity: attractor defaults to [1 1] (the origin).
+  Three-arity: explicit attractor for deflattice's movable tonal center."
+  ([position ^LatticeRegion region]
+   (gravity-steps position [1 1] region))
+  ([position attractor ^LatticeRegion region]
+   (let [current-h (h/tenney-h position attractor)]
+     (->> (:points region)
+          (filter #(< (h/tenney-h % attractor) current-h))
+          (sort-by #(h/tenney-h % position))))))
 
 (defn expansion-steps
-  "Return region points that are farther from the origin than `position`,
-  sorted nearest-first (smallest H-distance from position).
+  "Return region points farther from `attractor` than `position` is,
+  sorted nearest-first (smallest Tenney distance from position).
 
   These are the candidate steps for harmonic expansion — moving to any of
-  these increases tension. Used in the departure phase of defexcursion."
-  [position ^LatticeRegion region]
-  (let [current-h (h/tenney-h position)]
-    (->> (:points region)
-         (filter #(> (h/tenney-h %) current-h))
-         (sort-by #(h/tenney-h % position)))))
+  these increases harmonic distance from the attractor. Used in the
+  departure phase of defexcursion.
+
+  Two-arity: attractor defaults to [1 1] (the origin).
+  Three-arity: explicit attractor for deflattice's movable tonal center."
+  ([position ^LatticeRegion region]
+   (expansion-steps position [1 1] region))
+  ([position attractor ^LatticeRegion region]
+   (let [current-h (h/tenney-h position attractor)]
+     (->> (:points region)
+          (filter #(> (h/tenney-h % attractor) current-h))
+          (sort-by #(h/tenney-h % position))))))
 
 (defn nearest-points
   "Return the n nearest region points to `position` by Tenney distance,

@@ -132,6 +132,76 @@
         (is (every? #(> (h/tenney-h %) current-h) steps))))))
 
 ;; ---------------------------------------------------------------------------
+;; gravity-steps and expansion-steps — movable attractor (3-arity)
+;; ---------------------------------------------------------------------------
+
+(deftest gravity-steps-attractor-backward-compat-test
+  (testing "3-arity with [1 1] matches 2-arity for all region points"
+    (doseq [pos (l/region-points r5)]
+      (is (= (l/gravity-steps pos r5)
+             (l/gravity-steps pos [1 1] r5))))))
+
+(deftest gravity-steps-attractor-semantics-test
+  (testing "at the attractor — no gravity steps (H=0 from attractor, nothing lower)"
+    (is (empty? (l/gravity-steps [3 2] [3 2] r5))))
+  (testing "from [5 4] toward [3 2] — includes [3 2] and [1 1]"
+    ;; H([5 4], [3 2]) = H([5 3]) ≈ 3.91
+    ;; H([3 2], [3 2]) = 0    → included
+    ;; H([1 1], [3 2]) = H([4 3]) ≈ 3.58 < 3.91 → included
+    (let [steps (set (l/gravity-steps [5 4] [3 2] r5))]
+      (is (contains? steps [3 2]))
+      (is (contains? steps [1 1]))))
+  (testing "from [5 4] toward [3 2] — excludes [4 3] (further from [3 2] than [5 4] is)"
+    ;; H([4 3], [3 2]) = H([16 9]) ≈ 7.17 > H([5 4], [3 2]) ≈ 3.91
+    (let [steps (set (l/gravity-steps [5 4] [3 2] r5))]
+      (is (not (contains? steps [4 3])))))
+  (testing "[4 3] IS a gravity step from [5 4] with default attractor [1 1]"
+    ;; Confirms the attractor choice makes a real difference
+    (let [steps (set (l/gravity-steps [5 4] r5))]
+      (is (contains? steps [4 3]))))
+  (testing "all gravity steps are closer to attractor than position is"
+    (doseq [pos (l/region-points r5)]
+      (let [attractor [3 2]
+            current-h (h/tenney-h pos attractor)
+            steps     (l/gravity-steps pos attractor r5)]
+        (is (every? #(< (h/tenney-h % attractor) current-h) steps)))))
+  (testing "gravity steps sorted nearest-first from position"
+    (let [steps (l/gravity-steps [5 4] [3 2] r5)
+          dists (map #(h/tenney-h % [5 4]) steps)]
+      (is (= dists (sort dists))))))
+
+(deftest expansion-steps-attractor-backward-compat-test
+  (testing "3-arity with [1 1] matches 2-arity for all region points"
+    (doseq [pos (l/region-points r5)]
+      (is (= (l/expansion-steps pos r5)
+             (l/expansion-steps pos [1 1] r5))))))
+
+(deftest expansion-steps-attractor-semantics-test
+  (testing "at attractor [3 2] — all other region points are expansion steps"
+    ;; Analogous to expansion-steps([1 1], r5) returning all non-origin points
+    (let [steps    (l/expansion-steps [3 2] [3 2] r5)
+          non-attr (filter #(not= [3 2] %) (l/region-points r5))]
+      (is (= (count non-attr) (count steps)))))
+  (testing "from [5 4] toward [3 2] — [4 3] is an expansion step"
+    ;; H([4 3], [3 2]) ≈ 7.17 > H([5 4], [3 2]) ≈ 3.91
+    (let [steps (set (l/expansion-steps [5 4] [3 2] r5))]
+      (is (contains? steps [4 3]))))
+  (testing "from [5 4] toward [3 2] — [1 1] is NOT an expansion step"
+    ;; H([1 1], [3 2]) ≈ 3.58 < 3.91 — [1 1] is a gravity step, not expansion
+    (let [steps (set (l/expansion-steps [5 4] [3 2] r5))]
+      (is (not (contains? steps [1 1])))))
+  (testing "all expansion steps are farther from attractor than position is"
+    (doseq [pos (l/region-points r5)]
+      (let [attractor [3 2]
+            current-h (h/tenney-h pos attractor)
+            steps     (l/expansion-steps pos attractor r5)]
+        (is (every? #(> (h/tenney-h % attractor) current-h) steps)))))
+  (testing "expansion steps sorted nearest-first from position"
+    (let [steps (l/expansion-steps [3 2] [3 2] r5)
+          dists (map #(h/tenney-h % [3 2]) steps)]
+      (is (= dists (sort dists))))))
+
+;; ---------------------------------------------------------------------------
 ;; nearest-points
 ;; ---------------------------------------------------------------------------
 
